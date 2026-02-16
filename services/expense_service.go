@@ -8,13 +8,15 @@ import (
 type ExpenseService struct {
 	expenseRepo  domain.ExpenseRepository
 	categoryRepo domain.CategoryRepository
+	budgetRepo   domain.BudgetRepository
 }
 
 // NewExpenseService creates a new expense service
-func NewExpenseService(expenseRepo domain.ExpenseRepository, categoryRepo domain.CategoryRepository) *ExpenseService {
+func NewExpenseService(expenseRepo domain.ExpenseRepository, categoryRepo domain.CategoryRepository, budgetRepo domain.BudgetRepository) *ExpenseService {
 	return &ExpenseService{
 		expenseRepo:  expenseRepo,
 		categoryRepo: categoryRepo,
+		budgetRepo:   budgetRepo,
 	}
 }
 
@@ -40,7 +42,24 @@ func (s *ExpenseService) CreateExpense(expense *domain.Expense) (*domain.Expense
 		return nil, err
 	}
 
+	// Check budget status
+	s.checkBudget(expense)
+
 	return expense, nil
+}
+
+// checkBudget checks if the monthly budget is exceeded
+func (s *ExpenseService) checkBudget(expense *domain.Expense) {
+	month := int(expense.ExpenseDate.Month())
+	year := expense.ExpenseDate.Year()
+
+	budget, err := s.budgetRepo.GetByMonth(month, year)
+	if err == nil && budget != nil {
+		spentAmount, err := s.expenseRepo.GetTotalByMonth(month, year)
+		if err == nil && spentAmount > budget.BudgetAmount {
+			expense.Warning = "Warning: Monthly budget exceeded!"
+		}
+	}
 }
 
 // GetExpenses retrieves expenses with optional filters
@@ -102,6 +121,9 @@ func (s *ExpenseService) UpdateExpense(expense *domain.Expense) (*domain.Expense
 	if err != nil {
 		return nil, err
 	}
+
+	// Check budget status for updated expense
+	s.checkBudget(existingExpense)
 
 	return existingExpense, nil
 }

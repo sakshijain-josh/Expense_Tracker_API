@@ -11,6 +11,7 @@ type Expense struct {
 	PaymentMode PaymentMode `json:"payment_mode"`
 	ExpenseDate time.Time   `json:"expense_date"`
 	CreatedAt   time.Time   `json:"created_at"`
+	Warning     string      `json:"warning,omitempty"`
 }
 
 // ExpenseFilter represents filters for querying expenses

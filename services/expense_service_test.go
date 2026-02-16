@@ -49,6 +49,50 @@ func (m *MockExpenseRepository) GetTotalByMonth(month, year int) (float64, error
 	return args.Get(0).(float64), args.Error(1)
 }
 
+// MockBudgetRepository for expense service tests
+type MockBudgetRepositoryForExpense struct {
+	mock.Mock
+}
+
+func (m *MockBudgetRepositoryForExpense) Create(budget *domain.Budget) error {
+	args := m.Called(budget)
+	return args.Error(0)
+}
+
+func (m *MockBudgetRepositoryForExpense) GetByID(id int) (*domain.Budget, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Budget), args.Error(1)
+}
+
+func (m *MockBudgetRepositoryForExpense) GetAll() ([]*domain.Budget, error) {
+	args := m.Called()
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*domain.Budget), args.Error(1)
+}
+
+func (m *MockBudgetRepositoryForExpense) GetByMonth(month, year int) (*domain.Budget, error) {
+	args := m.Called(month, year)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Budget), args.Error(1)
+}
+
+func (m *MockBudgetRepositoryForExpense) Update(budget *domain.Budget) error {
+	args := m.Called(budget)
+	return args.Error(0)
+}
+
+func (m *MockBudgetRepositoryForExpense) Delete(id int) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
+
 // MockCategoryRepository for expense service tests
 type MockCategoryRepositoryForExpense struct {
 	mock.Mock
@@ -89,7 +133,8 @@ func TestExpenseService_CreateExpense(t *testing.T) {
 	t.Run("Successful creation", func(t *testing.T) {
 		mockExpenseRepo := new(MockExpenseRepository)
 		mockCategoryRepo := new(MockCategoryRepositoryForExpense)
-		expenseService := NewExpenseService(mockExpenseRepo, mockCategoryRepo)
+		mockBudgetRepo := new(MockBudgetRepositoryForExpense)
+		expenseService := NewExpenseService(mockExpenseRepo, mockCategoryRepo, mockBudgetRepo)
 
 		category := &domain.Category{ID: 1}
 		mockCategoryRepo.On("GetByID", 1).Return(category, nil)
@@ -115,7 +160,8 @@ func TestExpenseService_CreateExpense(t *testing.T) {
 	t.Run("Invalid payment mode", func(t *testing.T) {
 		mockExpenseRepo := new(MockExpenseRepository)
 		mockCategoryRepo := new(MockCategoryRepositoryForExpense)
-		expenseService := NewExpenseService(mockExpenseRepo, mockCategoryRepo)
+		mockBudgetRepo := new(MockBudgetRepositoryForExpense)
+		expenseService := NewExpenseService(mockExpenseRepo, mockCategoryRepo, mockBudgetRepo)
 
 		expense := &domain.Expense{
 			CategoryID:  1,
@@ -132,7 +178,8 @@ func TestExpenseService_CreateExpense(t *testing.T) {
 	t.Run("Invalid category", func(t *testing.T) {
 		mockExpenseRepo := new(MockExpenseRepository)
 		mockCategoryRepo := new(MockCategoryRepositoryForExpense)
-		expenseService := NewExpenseService(mockExpenseRepo, mockCategoryRepo)
+		mockBudgetRepo := new(MockBudgetRepositoryForExpense)
+		expenseService := NewExpenseService(mockExpenseRepo, mockCategoryRepo, mockBudgetRepo)
 
 		mockCategoryRepo.On("GetByID", 1).Return(nil, domain.ErrNotFound)
 
