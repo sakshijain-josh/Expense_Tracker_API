@@ -44,7 +44,7 @@ func main() {
 
 	// Initialize services
 	categoryService := services.NewCategoryService(categoryRepo)
-	expenseService := services.NewExpenseService(expenseRepo, categoryRepo)
+	expenseService := services.NewExpenseService(expenseRepo, categoryRepo, budgetRepo)
 	budgetService := services.NewBudgetService(budgetRepo, expenseRepo)
 
 	// Setup router
